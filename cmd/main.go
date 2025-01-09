@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/Ranzz02/auth-service/config"
 	"github.com/Ranzz02/auth-service/internal/db"
+	"github.com/Ranzz02/auth-service/internal/handlers"
+	"github.com/Ranzz02/auth-service/internal/middleware"
 	"github.com/Ranzz02/auth-service/internal/repositories"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -26,11 +28,17 @@ func main() {
 
 	r := gin.New()
 
+	//! Set middleware
 	r.Use(gin.Recovery())
+	r.Use(middleware.ErrorHandler())
 
 	db := db.Init()
 
 	// Repositories
 	authRepository := repositories.NewAuthRepository(db)
 
+	baseName := r.Group("/")
+
+	// Handlers
+	handlers.NewAuthHandler(baseName, authRepository)
 }
