@@ -12,6 +12,7 @@ func ErrorHandler() gin.HandlerFunc {
 		c.Next()
 
 		var apiErrors []utils.ApiError
+		lastErr := (c.Errors.Last().Err).(utils.ApiError)
 		for _, err := range c.Errors {
 			if apiErr, ok := err.Err.(utils.ApiError); ok {
 				apiErrors = append(apiErrors, apiErr)
@@ -19,17 +20,7 @@ func ErrorHandler() gin.HandlerFunc {
 		}
 
 		if len(apiErrors) > 0 {
-			statusCode := http.StatusBadRequest
-			switch apiErrors[len(apiErrors)-1].Code {
-			case 101, 102:
-				statusCode = http.StatusUnauthorized
-			case 301:
-				statusCode = http.StatusNotFound
-			case 302:
-				statusCode = http.StatusConflict
-			}
-
-			c.AbortWithStatusJSON(statusCode, gin.H{"errors": apiErrors})
+			c.AbortWithStatusJSON(lastErr.StatusCode, gin.H{"errors": apiErrors})
 			return
 		}
 

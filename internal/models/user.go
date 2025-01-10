@@ -12,6 +12,7 @@ type User struct {
 	Email    string `gorm:"size:50;not null;unique;" json:"email"`
 	Password string `gorm:"not null;" json:"-"`
 	Verified bool   `gorm:"default:false;not null;" json:"-"`
+	Profile
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

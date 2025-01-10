@@ -41,4 +41,7 @@ func main() {
 
 	// Handlers
 	handlers.NewAuthHandler(baseName, authRepository)
+
+	// Run API
+	r.Run(envConfig.ServerHost + ":" + envConfig.ServerPort)
 }
