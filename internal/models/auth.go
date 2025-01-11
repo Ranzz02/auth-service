@@ -21,4 +21,5 @@ type AuthRepository interface {
 	GetUser(c *gin.Context, query interface{}, args ...interface{}) (*Tokens, *User, *utils.ApiError, error)
 	GetSessions(c *gin.Context, query interface{}, args ...interface{}) (*[]Session, *utils.ApiError, error)
 	CreateSession(c *gin.Context) (*Tokens, *utils.ApiError, error)
+	DeleteSession(c *gin.Context) (bool, *utils.ApiError, error)
 }

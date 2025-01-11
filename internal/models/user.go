@@ -27,3 +27,6 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.Password = string(hash)
 	return
 }
+
+type UserRespository interface {
+}

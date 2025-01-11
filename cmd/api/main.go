@@ -40,7 +40,8 @@ func main() {
 	baseName := r.Group("/")
 
 	// Handlers
-	handlers.NewAuthHandler(baseName, authRepository)
+	handlers.NewAuthHandler(baseName, authRepository)    // Auth handler
+	handlers.NewSessionHandler(baseName, authRepository) // Session handler
 
 	// Run API
 	r.Run(envConfig.ServerHost + ":" + envConfig.ServerPort)

@@ -32,6 +32,11 @@ func (a *AuthRepository) GetSessions(c *gin.Context, query interface{}, args ...
 	panic("unimplemented")
 }
 
+// DeleteSession implements models.AuthRepository.
+func (a *AuthRepository) DeleteSession(c *gin.Context) (bool, *utils.ApiError, error) {
+	panic("unimplemented")
+}
+
 func NewAuthRepository(db *gorm.DB) models.AuthRepository {
 	return &AuthRepository{
 		db: db,

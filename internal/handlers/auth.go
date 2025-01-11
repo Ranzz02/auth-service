@@ -26,13 +26,28 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 }
 
+// Verify & Reset
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+
+}
+
+func (h *AuthHandler) Verify(c *gin.Context) {
+
+}
+
 // Auth Handler to manage: Signin, Signup, Signout and Refresh
 func NewAuthHandler(router *gin.RouterGroup, r models.AuthRepository) {
 	handler := &AuthHandler{
 		repository: &r,
 	}
 
+	// Authentication
 	router.POST("/signin", handler.Signin)
 	router.POST("/signup", handler.Signup)
 	router.GET("/signout", handler.Signout)
+	router.GET("/refresh", handler.Refresh)
+
+	// Verify & Reset
+	router.POST("/reset", handler.ResetPassword)
+	router.GET("/verify", handler.Verify)
 }
