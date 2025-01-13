@@ -3,25 +3,17 @@ package db
 import (
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/Ranzz02/auth-service/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
 func ConnectDatabase() (*gorm.DB, error) {
-	godotenv.Load(".env")
+	config := config.NewEnvConfig()
 
-	DB_HOST := os.Getenv("DB_HOST")
-	DB_USER := os.Getenv("DB_USER")
-	DB_PASSWORD := os.Getenv("DB_PASSWORD")
-	DB_NAME := os.Getenv("DB_NAME")
-	DB_PORT := os.Getenv("DB_PORT")
-	DB_SSL := os.Getenv("DB_SSL")
-
-	dsn := "host=" + DB_HOST + " user=" + DB_USER + " password=" + DB_PASSWORD + " dbname=" + DB_NAME + " port=" + DB_PORT + " sslmode=" + DB_SSL
+	dsn := "host=" + config.DBHost + " user=" + config.DBUser + " password=" + config.DBPassword + " dbname=" + config.DBName + " port=" + config.DBPort + " sslmode=" + config.DBSSLMode
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,

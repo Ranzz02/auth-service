@@ -6,7 +6,7 @@ import (
 )
 
 type UserHandler struct {
-	repository *models.UserRespository
+	repository *models.UserRepository
 }
 
 func (h *UserHandler) GetUsers(c *gin.Context) {
@@ -17,7 +17,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 }
 
-func NewUserHandler(router *gin.RouterGroup, repository models.UserRespository) {
+func NewUserHandler(router *gin.RouterGroup, repository models.UserRepository) {
 	handler := UserHandler{
 		repository: &repository,
 	}

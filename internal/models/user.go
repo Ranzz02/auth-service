@@ -1,6 +1,8 @@
 package models
 
 import (
+	"github.com/Ranzz02/auth-service/internal/utils"
+	"github.com/gin-gonic/gin"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -28,5 +30,11 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-type UserRespository interface {
+func (u *User) VerifyPassword(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)) == nil
+}
+
+type UserRepository interface {
+	GetUsers(c *gin.Context, query interface{}, args ...interface{}) (*User, *utils.ApiError, error)
+	UpdateUser(c *gin.Context, query interface{}, updateData map[string]interface{}, args ...interface{}) (*User, *utils.ApiError, error)
 }

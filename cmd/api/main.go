@@ -6,7 +6,9 @@ import (
 	"github.com/Ranzz02/auth-service/internal/handlers"
 	"github.com/Ranzz02/auth-service/internal/middleware"
 	"github.com/Ranzz02/auth-service/internal/repositories"
+	"github.com/Ranzz02/auth-service/internal/services"
 	"github.com/gin-gonic/gin"
+	"github.com/markbates/goth"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,6 +28,14 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
+	// Instantiate goth
+	goth.UseProviders(
+		google.New(
+			
+		)
+	)
+
+	// Instantiate gin
 	r := gin.New()
 
 	//! Set middleware
@@ -37,11 +47,14 @@ func main() {
 	// Repositories
 	authRepository := repositories.NewAuthRepository(db)
 
+	// Services
+	authService := services.NewAuthService(authRepository)
+
 	baseName := r.Group("/")
 
 	// Handlers
-	handlers.NewAuthHandler(baseName, authRepository)    // Auth handler
-	handlers.NewSessionHandler(baseName, authRepository) // Session handler
+	handlers.NewAuthHandler(baseName, authRepository, authService) // Auth handler
+	handlers.NewSessionHandler(baseName, authRepository)           // Session handler
 
 	// Run API
 	r.Run(envConfig.ServerHost + ":" + envConfig.ServerPort)

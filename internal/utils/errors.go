@@ -30,6 +30,7 @@ const (
 	// Validation Errors
 	CodeUsernameOrEmailInUse = 201
 	CodeInvalidInputData     = 202
+	CodeInvalidCredentials   = 203
 
 	// Resource Errors
 	CodeResourceNotFound = 301
@@ -65,6 +66,12 @@ var (
 		CodeInvalidInputData,
 		"The input data provided is invalid.",
 		"Please review the input fields and try again.",
+		http.StatusBadRequest,
+	)
+	InvalidCredentials = NewApiError(
+		CodeInvalidCredentials,
+		"Invalid credentials. Please check your username/email and password and try again.",
+		"",
 		http.StatusBadRequest,
 	)
 
