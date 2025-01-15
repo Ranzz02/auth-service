@@ -12,7 +12,6 @@ func ErrorHandler() gin.HandlerFunc {
 		c.Next()
 
 		var apiErrors []utils.ApiError
-		lastErr := (c.Errors.Last().Err).(utils.ApiError)
 		for _, err := range c.Errors {
 			if apiErr, ok := err.Err.(utils.ApiError); ok {
 				apiErrors = append(apiErrors, apiErr)
@@ -20,14 +19,14 @@ func ErrorHandler() gin.HandlerFunc {
 		}
 
 		if len(apiErrors) > 0 {
-			c.AbortWithStatusJSON(lastErr.StatusCode, gin.H{"errors": apiErrors})
+			c.AbortWithStatusJSON(apiErrors[len(apiErrors)-1].StatusCode, gin.H{"errors": apiErrors})
 			return
 		}
 
 		if len(c.Errors) > 0 {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"code":    500,
-				"message": "Internal servver error",
+				"message": c.Errors.Last().Error(),
 			})
 			return
 		}

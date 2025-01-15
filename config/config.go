@@ -23,7 +23,14 @@ type EnvConfig struct {
 	TokenAccessTime  int    `env:"TOKEN_ACCESS_TIME,required"`
 	TokenRefreshTime int    `env:"TOKEN_REFRESH_TIME,required"`
 	TokenVerifyTime  int    `env:"TOKEN_VERIFY_TIME,required"`
-	TokenSecret      []byte `env:"TOKEN_SECRET,required"`
+	TokenSecret      string `env:"TOKEN_SECRET,required"`
+
+	SmtpServer     string `env:"SMTP_SERVER,required"`
+	SmtpPort       int    `env:"SMTP_PORT,required"`
+	SmtpUser       string `env:"SMTP_USER,required"`
+	SmtpPassword   string `env:"SMTP_PASSWORD,required"`
+	SenderIdentity string `env:"SENDER_IDENTITY,required"`
+	SenderEmail    string `env:"SENDER_EMAIL,required"`
 }
 
 func NewEnvConfig() *EnvConfig {

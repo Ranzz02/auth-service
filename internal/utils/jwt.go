@@ -33,7 +33,7 @@ func GenerateAccessToken(id string) (string, error) {
 	claims["exp"] = time.Now().Add(time.Minute * time.Duration(lifespan)).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(config.TokenSecret)
+	return token.SignedString([]byte(config.TokenSecret))
 }
 
 func GenerateRefreshToken(id string) (string, string, error) {
@@ -53,7 +53,7 @@ func GenerateRefreshToken(id string) (string, string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(lifespan)).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(config.TokenSecret)
+	tokenString, err := token.SignedString([]byte(config.TokenSecret))
 	return jti, tokenString, err
 }
 

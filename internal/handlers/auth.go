@@ -16,7 +16,7 @@ type AuthHandler struct {
 // Sign In
 //
 // Function to sign in and create session for user
-func (h *AuthHandler) Signin(c *gin.Context) {
+func (h *AuthHandler) SignIn(c *gin.Context) {
 	var input models.SignInData
 
 	// Parse and validate input JSON
@@ -26,7 +26,7 @@ func (h *AuthHandler) Signin(c *gin.Context) {
 	}
 
 	// Query user by username or email
-	user, apiError, err := h.repository.GetUser(c, "WHERE username = ? OR email = ?", input.Identity, input.Identity)
+	user, apiError, err := h.repository.GetUser(c, "username = ? OR email = ?", input.Identity, input.Identity)
 	if err != nil {
 		c.Error(apiError)
 		return
@@ -55,7 +55,7 @@ func (h *AuthHandler) Signin(c *gin.Context) {
 // Sign up
 //
 // Function to try and sign up user and create session
-func (h *AuthHandler) Signup(c *gin.Context) {
+func (h *AuthHandler) SignUp(c *gin.Context) {
 	var input models.SignUpData
 
 	// Parse and validate input JSON
@@ -65,7 +65,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	}
 
 	// Query user by username or email
-	user, apiError, err := h.repository.CreateUser(c, &input)
+	user, apiError, err := h.service.SignUpUser(c, input)
 	if err != nil {
 		c.Error(apiError)
 		return
@@ -85,7 +85,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	})
 }
 
-func (h *AuthHandler) Signout(c *gin.Context) {
+func (h *AuthHandler) SignOut(c *gin.Context) {
 
 }
 
@@ -98,7 +98,16 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 
 }
 
-func (h *AuthHandler) Verify(c *gin.Context) {
+func (h *AuthHandler) ConfirmAccount(c *gin.Context) {
+
+}
+
+// OAuth
+func (h *AuthHandler) RedirectToProvider(c *gin.Context) {
+
+}
+
+func (h *AuthHandler) ProviderCallback(c *gin.Context) {
 
 }
 
@@ -110,12 +119,16 @@ func NewAuthHandler(router *gin.RouterGroup, r models.AuthRepository, s models.A
 	}
 
 	// Authentication
-	router.POST("/signin", handler.Signin)
-	router.POST("/signup", handler.Signup)
-	router.GET("/signout", handler.Signout)
+	router.POST("/signin", handler.SignIn)
+	router.POST("/signup", handler.SignUp)
+	router.GET("/signout", handler.SignOut)
 	router.GET("/refresh", handler.Refresh)
 
 	// Verify & Reset
 	router.POST("/reset", handler.ResetPassword)
-	router.GET("/verify", handler.Verify)
+	router.GET("/confirm", handler.ConfirmAccount)
+
+	// OAuth
+	router.GET("/auth/:provider", handler.RedirectToProvider)
+	router.GET("/auth/:provider/callback", handler.ProviderCallback)
 }

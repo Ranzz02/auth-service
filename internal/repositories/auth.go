@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/Ranzz02/auth-service/internal/models"
 	"github.com/Ranzz02/auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -11,12 +13,19 @@ type AuthRepository struct {
 	db *gorm.DB
 }
 
+// GetDB implements models.AuthRepository.
+func (a *AuthRepository) GetDB() *gorm.DB {
+	return a.db
+}
+
 // RegisterUser implements models.AuthRepository.
 //
 // This function takes input from a user and creates an entry with that information to the database and returns that user and access & refresh tokens also.
-func (a *AuthRepository) CreateUser(c *gin.Context, registerData *models.SignUpData) (*models.User, *utils.ApiError, error) {
+func (a *AuthRepository) CreateUser(c *gin.Context, registerData models.SignUpData, tx *gorm.DB) (*models.User, *utils.ApiError, error) {
 	// start transaction
-	tx := a.db.Begin()
+	if tx == nil {
+		tx = a.db
+	}
 
 	user := &models.User{
 		Username: registerData.Username,
@@ -25,16 +34,8 @@ func (a *AuthRepository) CreateUser(c *gin.Context, registerData *models.SignUpD
 	}
 
 	// Try to create instance in database
-	res := tx.Model(&models.User{}).Create(user)
-	if res.Error != nil {
-		tx.Rollback() // Rollback database
-		return nil, &utils.UsernameOrEmailInUse, res.Error
-	}
-
-	// Commit changes to the database
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, &utils.InternalServerError, err
+	if err := tx.Model(&models.User{}).Create(user).Error; err != nil {
+		return nil, &utils.UsernameOrEmailInUse, err
 	}
 
 	return user, nil, nil
@@ -47,7 +48,7 @@ func (a *AuthRepository) GetUser(c *gin.Context, query interface{}, args ...inte
 	var user models.User
 
 	// Try to locate the user
-	if err := a.db.Model(&models.User{}).Where(query, args).First(&user).Error; err != nil {
+	if err := a.db.Model(&models.User{}).Where(query, args...).First(&user).Error; err != nil {
 		return nil, &utils.ResourceNotFound, err
 	}
 
@@ -55,8 +56,18 @@ func (a *AuthRepository) GetUser(c *gin.Context, query interface{}, args ...inte
 }
 
 // CreateSession implements models.AuthRepository.
-func (a *AuthRepository) CreateSession(c *gin.Context, jti string) (*models.Session, *utils.ApiError, error) {
-	panic("unimplemented")
+func (a *AuthRepository) CreateSession(c *gin.Context, userId string, jti string) (*models.Session, *utils.ApiError, error) {
+	session := &models.Session{
+		UserID:    userId,
+		JTI:       jti,
+		LastLogin: time.Now(),
+	}
+
+	if err := a.db.Create(session).Error; err != nil {
+		return nil, &utils.InternalServerError, err
+	}
+
+	return session, nil, nil
 }
 
 // GetSession implements models.AuthRepository.

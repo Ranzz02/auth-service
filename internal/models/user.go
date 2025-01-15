@@ -35,6 +35,7 @@ func (u *User) VerifyPassword(password string) bool {
 }
 
 type UserRepository interface {
-	GetUsers(c *gin.Context, query interface{}, args ...interface{}) (*User, *utils.ApiError, error)
+	GetUser(c *gin.Context, query interface{}, args ...interface{}) (*User, *utils.ApiError, error)
+	GetUsers(c *gin.Context, query interface{}, args ...interface{}) (*[]User, *utils.ApiError, error)
 	UpdateUser(c *gin.Context, query interface{}, updateData map[string]interface{}, args ...interface{}) (*User, *utils.ApiError, error)
 }

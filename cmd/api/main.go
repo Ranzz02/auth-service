@@ -7,12 +7,13 @@ import (
 	"github.com/Ranzz02/auth-service/internal/middleware"
 	"github.com/Ranzz02/auth-service/internal/repositories"
 	"github.com/Ranzz02/auth-service/internal/services"
+	"github.com/Ranzz02/auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/markbates/goth"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	// Configure everything
 	envConfig := config.NewEnvConfig()
 	logLevel, err := logrus.ParseLevel(envConfig.LogLevel)
 	if err != nil {
@@ -28,13 +29,6 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	// Instantiate goth
-	goth.UseProviders(
-		google.New(
-			
-		)
-	)
-
 	// Instantiate gin
 	r := gin.New()
 
@@ -42,19 +36,27 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.ErrorHandler())
 
+	// Instantiate mail
+	utils.NewEmailHandler()
+
+	// Init database connection
 	db := db.Init()
 
 	// Repositories
 	authRepository := repositories.NewAuthRepository(db)
+	userRepository := repositories.NewUserRepository(db)
 
 	// Services
 	authService := services.NewAuthService(authRepository)
 
-	baseName := r.Group("/")
+	// Router Groups
+	baseRouter := r.Group("/")     // "/"" group (base)
+	authRouter := r.Group("/auth") // "/auth" group
 
 	// Handlers
-	handlers.NewAuthHandler(baseName, authRepository, authService) // Auth handler
-	handlers.NewSessionHandler(baseName, authRepository)           // Session handler
+	handlers.NewAuthHandler(authRouter, authRepository, authService) // Auth handler
+	handlers.NewSessionHandler(authRouter, authRepository)           // Session handler
+	handlers.NewUserHandler(baseRouter, userRepository)              // User handler
 
 	// Run API
 	r.Run(envConfig.ServerHost + ":" + envConfig.ServerPort)
