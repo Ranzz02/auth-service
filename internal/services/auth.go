@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/Ranzz02/auth-service/internal/models"
 	"github.com/Ranzz02/auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -13,18 +15,22 @@ type AuthService struct {
 func (a *AuthService) SignUpUser(c *gin.Context, signUpData models.SignUpData) (*models.User, *utils.ApiError, error) {
 	tx := a.repository.GetDB().Begin()
 
-	user, apiError, err := a.repository.CreateUser(c, signUpData, tx)
+	user, verifyCode, apiError, err := a.repository.CreateUser(c, signUpData, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, apiError, err
 	}
 
-	go utils.SendConfirmEmail(utils.ConfirmMailOptions{Username: user.Username, Link: "http://", To: user.Email})
-
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, &utils.InternalServerError, err
 	}
+
+	token, err := utils.GenerateVerifyToken(user.ID, verifyCode)
+	if err != nil {
+		return nil, &utils.InternalServerError, err
+	}
+	go utils.SendConfirmEmail(utils.ConfirmMailOptions{Username: user.Username, Link: fmt.Sprintf("http://localhost:3000/auth/confirm?token=%s", token), To: user.Email})
 
 	return user, nil, err
 }

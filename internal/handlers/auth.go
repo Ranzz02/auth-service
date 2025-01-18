@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Ranzz02/auth-service/internal/models"
@@ -99,15 +100,24 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 }
 
 func (h *AuthHandler) ConfirmAccount(c *gin.Context) {
+	token := c.Query("token")
 
+	claims := utils.ExtractClaims(token)
+	if claims == nil {
+		c.Error(fmt.Errorf("Failed to extract claims from token, or token is not valid."))
+		return
+	}
+
+	user, ok := h.repository.VerifyUser(c, claims["sub"].(string), claims["code"].(string))
+	if !ok {
+		c.Error(fmt.Errorf("Failed to verify user, try sending a new verify email."))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
-// OAuth
-func (h *AuthHandler) RedirectToProvider(c *gin.Context) {
-
-}
-
-func (h *AuthHandler) ProviderCallback(c *gin.Context) {
+func (h *AuthHandler) ResendVerify(c *gin.Context) {
 
 }
 
@@ -126,9 +136,6 @@ func NewAuthHandler(router *gin.RouterGroup, r models.AuthRepository, s models.A
 
 	// Verify & Reset
 	router.POST("/reset", handler.ResetPassword)
+	router.GET("/resend", handler.ResendVerify)
 	router.GET("/confirm", handler.ConfirmAccount)
-
-	// OAuth
-	router.GET("/auth/:provider", handler.RedirectToProvider)
-	router.GET("/auth/:provider/callback", handler.ProviderCallback)
 }

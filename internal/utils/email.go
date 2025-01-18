@@ -13,28 +13,32 @@ import (
 var mailer *EmailHandler
 
 type EmailHandler struct {
-	h *hermes.Hermes
+	h      *hermes.Hermes
+	dialer *gomail.Dialer
 }
 
 func NewEmailHandler() {
 	h := &hermes.Hermes{
 		Product: hermes.Product{
-			Name: "DiscGolf App",
-			Link: "https://rasmus-raiha.com",
-			Logo: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fusdgc.com%2Fwp-content%2Fuploads%2F2015%2F10%2FLogo-web.jpg&f=1&nofb=1&ipt=d778b5d587c0f2ef66dfb94a00ea1339c0c45452d9a68fb2c3a4590d8478280c&ipo=images",
+			Name:      "DiscGolf App",
+			Link:      "https://rasmus-raiha.com",
+			Logo:      "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fusdgc.com%2Fwp-content%2Fuploads%2F2015%2F10%2FLogo-web.jpg&f=1&nofb=1&ipt=d778b5d587c0f2ef66dfb94a00ea1339c0c45452d9a68fb2c3a4590d8478280c&ipo=images",
+			Copyright: "Copyright © 2024 Disc Golf App. All rights reserved",
 		},
 	}
 
+	// Create dialer
+	config := config.NewEnvConfig()
+	d := gomail.NewDialer(config.SmtpServer, config.SmtpPort, config.SmtpUser, config.SmtpPassword)
+
 	mailer = &EmailHandler{
-		h: h,
+		h:      h,
+		dialer: d,
 	}
+
 }
 
 type smtpAuthentication struct {
-	Server         string
-	Port           int
-	SMTPUser       string
-	SMTPPassword   string
 	SenderIdentity string
 	SenderEmail    string
 }
@@ -45,17 +49,6 @@ type sendOptions struct {
 }
 
 func (h *EmailHandler) send(smtpConfig smtpAuthentication, options sendOptions, htmlBody string, txtBody string) error {
-	if smtpConfig.Server == "" {
-		return errors.New("SMTP server config is empty")
-	}
-	if smtpConfig.Port == 0 {
-		return errors.New("SMTP port config is empty")
-	}
-
-	if smtpConfig.SMTPUser == "" {
-		return errors.New("SMTP user is empty")
-	}
-
 	if smtpConfig.SenderIdentity == "" {
 		return errors.New("SMTP sender identity is empty")
 	}
@@ -81,9 +74,7 @@ func (h *EmailHandler) send(smtpConfig smtpAuthentication, options sendOptions, 
 	m.SetBody("text/plain", txtBody)
 	m.AddAlternative("text/html", htmlBody)
 
-	d := gomail.NewDialer(smtpConfig.Server, smtpConfig.Port, smtpConfig.SMTPUser, smtpConfig.SMTPPassword)
-
-	return d.DialAndSend(m)
+	return h.dialer.DialAndSend(m)
 }
 
 // Confirm account email
@@ -128,12 +119,8 @@ func SendConfirmEmail(options ConfirmMailOptions) (bool, error) {
 	config := config.NewEnvConfig()
 
 	auth := smtpAuthentication{
-		Server:         config.SmtpServer,
-		Port:           config.SmtpPort,
 		SenderEmail:    config.SenderEmail,
 		SenderIdentity: config.SenderIdentity,
-		SMTPUser:       config.SmtpUser,
-		SMTPPassword:   config.SmtpPassword,
 	}
 
 	conf := sendOptions{
@@ -146,6 +133,6 @@ func SendConfirmEmail(options ConfirmMailOptions) (bool, error) {
 		return false, err
 	}
 
-	fmt.Println("Sent email")
+	fmt.Println("Email sent")
 	return true, nil
 }

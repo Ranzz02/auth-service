@@ -6,6 +6,7 @@ import (
 	"github.com/Ranzz02/auth-service/internal/models"
 	"github.com/Ranzz02/auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
 )
 
@@ -21,24 +22,30 @@ func (a *AuthRepository) GetDB() *gorm.DB {
 // RegisterUser implements models.AuthRepository.
 //
 // This function takes input from a user and creates an entry with that information to the database and returns that user and access & refresh tokens also.
-func (a *AuthRepository) CreateUser(c *gin.Context, registerData models.SignUpData, tx *gorm.DB) (*models.User, *utils.ApiError, error) {
+func (a *AuthRepository) CreateUser(c *gin.Context, registerData models.SignUpData, tx *gorm.DB) (*models.User, string, *utils.ApiError, error) {
 	// start transaction
 	if tx == nil {
 		tx = a.db
 	}
 
+	code, err := gonanoid.New()
+	if err != nil {
+		return nil, "", &utils.InternalServerError, err
+	}
+
 	user := &models.User{
-		Username: registerData.Username,
-		Email:    registerData.Email,
-		Password: registerData.Password,
+		Username:   registerData.Username,
+		Email:      registerData.Email,
+		Password:   registerData.Password,
+		VerifyCode: code,
 	}
 
 	// Try to create instance in database
 	if err := tx.Model(&models.User{}).Create(user).Error; err != nil {
-		return nil, &utils.UsernameOrEmailInUse, err
+		return nil, "", &utils.UsernameOrEmailInUse, err
 	}
 
-	return user, nil, nil
+	return user, code, nil, nil
 }
 
 // GetUser implements models.AuthRepository.
@@ -53,6 +60,21 @@ func (a *AuthRepository) GetUser(c *gin.Context, query interface{}, args ...inte
 	}
 
 	return &user, nil, nil
+}
+
+// VerifyUser implements models.AuthRepository.
+func (a *AuthRepository) VerifyUser(c *gin.Context, id string, code string) (*models.User, bool) {
+	var user models.User
+	if err := a.db.Where("id = ?", id).First(&user).Error; err != nil {
+		return nil, false
+	}
+	if ok := user.VerifyUser(code); !ok {
+		return nil, false
+	}
+	if err := a.db.Model(&user).Update("verified", true).Error; err != nil {
+		return nil, false
+	}
+	return &user, true
 }
 
 // CreateSession implements models.AuthRepository.
