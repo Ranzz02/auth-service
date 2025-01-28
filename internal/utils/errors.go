@@ -26,6 +26,8 @@ const (
 	// Authentication Errors
 	CodeInvalidUsernameOrEmail = 101
 	CodeUserIsNotAuthorized    = 102
+	CodeNoToken                = 103
+	CodeInvalidToken           = 104
 
 	// Validation Errors
 	CodeUsernameOrEmailInUse = 201
@@ -53,6 +55,18 @@ var (
 		"User is not authorized to perform this action.",
 		"",
 		http.StatusForbidden,
+	)
+	NoTokenProvided = NewApiError(
+		CodeNoToken,
+		"No token provided in request",
+		"",
+		http.StatusUnauthorized,
+	)
+	InvalidTokenProvided = NewApiError(
+		CodeInvalidToken,
+		"Token is not valid, sign in again",
+		"",
+		http.StatusUnauthorized,
 	)
 
 	// Validation errors

@@ -2,9 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Ranzz02/auth-service/config"
+	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
@@ -139,4 +141,20 @@ func VerifyToken(token string, tokenType TokenType) bool {
 	}
 
 	return true
+}
+
+func ExtractToken(c *gin.Context) *string {
+	if access_token, err := c.Request.Cookie("access_token"); err == nil {
+		return &access_token.Value
+	}
+	if refresh_token, err := c.Request.Cookie("refresh_token"); err == nil {
+		return &refresh_token.Value
+	}
+	if bearerToken := c.Request.Header.Get("Authorization"); bearerToken != "" && len(strings.Split(bearerToken, " ")) == 2 {
+		return &strings.Split(bearerToken, " ")[1]
+	}
+	if queryToken := c.Query("token"); queryToken != "" {
+		return &queryToken
+	}
+	return nil
 }

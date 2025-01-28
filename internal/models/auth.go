@@ -29,6 +29,7 @@ type AuthRepository interface {
 	GetSessions(c *gin.Context, query interface{}, args ...interface{}) (*[]Session, *utils.ApiError, error)
 	CreateSession(c *gin.Context, userId string, jti string) (*Session, *utils.ApiError, error)
 	DeleteSession(c *gin.Context) (bool, *utils.ApiError, error)
+	DeleteSessions(c *gin.Context) (bool, *utils.ApiError, error)
 	GetDB() *gorm.DB
 }
 

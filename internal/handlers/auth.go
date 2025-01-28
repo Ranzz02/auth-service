@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Ranzz02/auth-service/internal/middleware"
 	"github.com/Ranzz02/auth-service/internal/models"
 	"github.com/Ranzz02/auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -87,7 +88,20 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 }
 
 func (h *AuthHandler) SignOut(c *gin.Context) {
+	all := c.DefaultQuery("all", "false")
+	if all == "true" {
+		if ok, apiErr, _ := h.repository.DeleteSessions(c); !ok {
+			c.Error(apiErr)
+			return
+		}
+	} else {
+		if ok, apiErr, _ := h.repository.DeleteSession(c); !ok {
+			c.Error(apiErr)
+			return
+		}
+	}
 
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
@@ -136,6 +150,6 @@ func NewAuthHandler(router *gin.RouterGroup, r models.AuthRepository, s models.A
 
 	// Verify & Reset
 	router.POST("/reset", handler.ResetPassword)
-	router.GET("/resend", handler.ResendVerify)
+	router.GET("/resend", middleware.AuthMiddleware, handler.ResendVerify)
 	router.GET("/confirm", handler.ConfirmAccount)
 }

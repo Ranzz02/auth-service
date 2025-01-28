@@ -50,12 +50,13 @@ func main() {
 	authService := services.NewAuthService(authRepository)
 
 	// Router Groups
-	baseRouter := r.Group("/")     // "/"" group (base)
-	authRouter := r.Group("/auth") // "/auth" group
+	baseRouter := r.Group("/", middleware.AuthMiddleware)                 // "/"" group (base)
+	authRouter := r.Group("/auth")                                        // "/auth" group
+	sessionRouter := r.Group("/auth/sessions", middleware.AuthMiddleware) // "/auth/sessions" group
 
 	// Handlers
 	handlers.NewAuthHandler(authRouter, authRepository, authService) // Auth handler
-	handlers.NewSessionHandler(authRouter, authRepository)           // Session handler
+	handlers.NewSessionHandler(sessionRouter, authRepository)        // Session handler
 	handlers.NewUserHandler(baseRouter, userRepository)              // User handler
 
 	// Run API
